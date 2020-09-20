@@ -9,6 +9,7 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorSupplier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,8 @@ import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration;
 import org.springframework.kafka.config.KafkaStreamsConfiguration;
 
 import com.sahab.order.common.model.OrderDetails;
+import com.sahab.order.stream.processors.ElectronicsItemOrderProcessor;
+import com.sahab.order.stream.processors.GroceryOrderProcessor;
 import com.sahab.order.stream.processors.OrderProcessor;
 
 @Configuration
@@ -32,6 +35,11 @@ public class KafkaStreamConfig {
 	@Value("${kafka.topic.output}")
 	private String outputTopic;
 
+	@Autowired
+	private GroceryOrderProcessor groceryOrderProcessor;
+	
+	@Autowired
+	private ElectronicsItemOrderProcessor electronicsItemOrderProcessor;
 
 	@Bean(name = KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME)
 	public KafkaStreamsConfiguration kStreamsConfigs(KafkaProperties kafkaProperties) {
@@ -53,6 +61,8 @@ public class KafkaStreamConfig {
 				return new OrderProcessor();
 			}
 		});
+		groceryOrderProcessor.process(stream);
+		electronicsItemOrderProcessor.process(stream);
 		stream.to(outputTopic);
 		return stream;
 	}
